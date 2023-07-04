@@ -37,13 +37,14 @@ fn setup(
         ..Default::default()
     });
 
-    let mesh = make_plane(250, 250);
+    let resolution = 5.;
+    let mesh = make_plane(250, 250, resolution);
 
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(mesh),
             material: materials.add(Color::hsl(0.0, 0.0, 0.2).into()),
-            transform: Transform::from_xyz(0., 0.0, -5.0),
+            transform: Transform::from_xyz(0., 0.0, 0.0),
             ..default()
         },
         Wireframe,
@@ -59,7 +60,7 @@ fn setup(
         ..default()
     });
 
-    let mut camera_transform = Transform::from_xyz(0.0, 5.0, 17.0);
+    let mut camera_transform = Transform::from_xyz(0.0, 5.0, 250.0 / resolution / 2.);
     camera_transform.rotate_x(-0.2);
     commands.spawn(Camera3dBundle {
         transform: camera_transform,
@@ -67,22 +68,8 @@ fn setup(
     });
 }
 
-fn make_mesh() -> Mesh {
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.insert_attribute(
-        Mesh::ATTRIBUTE_POSITION,
-        vec![[0., 0., 0.], [1., 5., 1.], [2., 0., 0.]],
-    );
-
-    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0., 1., 0.]; 3]);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; 3]);
-    mesh.set_indices(Some(mesh::Indices::U32(vec![0, 2, 1])));
-
-    mesh
-}
-
 // Takes in a 2d array of Vec3 as points and generates a planes from the points
-fn make_plane(depth: u32, width: u32) -> Mesh {
+fn make_plane(depth: u32, width: u32, resolution: f32) -> Mesh {
     let vertices_count: usize = ((width + 1) * (depth + 1)) as usize;
     let triangle_count: usize = (width * depth * 2 * 3) as usize;
 
@@ -96,7 +83,6 @@ fn make_plane(depth: u32, width: u32) -> Mesh {
     let simplex = Simplex::new(48192874);
     let perlin = Perlin::new(0891273);
 
-    let resolution = 5.;
     for d in 0..=width {
         for w in 0..=depth {
             let (w_f32, d_f32) = (w as f32, d as f32);
