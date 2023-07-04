@@ -2,6 +2,9 @@
 
 This is an example for terrain generation in bevy.
 
+![Terrain in bevy](docs/terrain.png)
+![Terrain in bevy with wireframe](docs/terrain_wireframe_2.png)
+
 ## How it works
 The `make_plane` function does the bulk of the work. In essence, it takes in a width and height, and generates a plane from them. It does this in three steps:
 
