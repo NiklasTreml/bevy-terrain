@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     math::{vec2, DVec2, DVec3},
-    pbr::wireframe::Wireframe,
+    pbr::{wireframe::Wireframe, CascadeShadowConfigBuilder},
     prelude::{shape::Cube, *},
     render::mesh,
     render::render_resource::PrimitiveTopology,
@@ -18,7 +18,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(EditorPlugin::default())
-        .add_plugin(InfiniteGridPlugin)
+        // .add_plugin(InfiniteGridPlugin)
         .add_startup_system(setup)
         .run();
 }
@@ -43,24 +43,37 @@ fn setup(
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(mesh),
-            material: materials.add(Color::hsl(0.0, 0.0, 0.2).into()),
+            // material: materials.add(Color::hsl(0.0, 0.0, 0.2).into()),
+            material: materials.add(StandardMaterial {
+                base_color: Color::DARK_GRAY,
+                double_sided: true,
+                perceptual_roughness: 1.0,
+                metallic: 0.3,
+                ..default()
+            }),
             transform: Transform::from_xyz(0., 0.0, 0.0),
             ..default()
         },
-        Wireframe,
+        // Wireframe,
     ));
 
     commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1500.0,
-            shadows_enabled: true,
-            ..default()
-        },
+        point_light: PointLight { ..default() },
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..default()
     });
+    commands.spawn(PointLightBundle {
+        point_light: PointLight { ..default() },
+        transform: Transform::from_xyz(15.0, 8.0, 5.0),
+        ..default()
+    });
+    commands.spawn(PointLightBundle {
+        point_light: PointLight { ..default() },
+        transform: Transform::from_xyz(-20.0, 8.0, 3.0),
+        ..default()
+    });
 
-    let mut camera_transform = Transform::from_xyz(0.0, 5.0, 250.0 / resolution / 2.);
+    let mut camera_transform = Transform::from_xyz(0.0, 8.0, 40.0);
     camera_transform.rotate_x(-0.2);
     commands.spawn(Camera3dBundle {
         transform: camera_transform,
