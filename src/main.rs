@@ -13,6 +13,7 @@ use bevy::{
 use bevy_infinite_grid::{InfiniteGrid, InfiniteGridBundle, InfiniteGridPlugin};
 
 use bevy_editor_pls::prelude::*;
+use noise::{NoiseFn, Perlin, Simplex};
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -36,7 +37,7 @@ fn setup(
         ..Default::default()
     });
 
-    let mesh = make_plane(25, 25);
+    let mesh = make_plane(250, 250);
 
     commands.spawn((
         PbrBundle {
@@ -58,8 +59,8 @@ fn setup(
         ..default()
     });
 
-    let mut camera_transform = Transform::from_xyz(0.0, 2.0, -2.0);
-    camera_transform.rotate_x(-0.5);
+    let mut camera_transform = Transform::from_xyz(0.0, 5.0, 17.0);
+    camera_transform.rotate_x(-0.2);
     commands.spawn(Camera3dBundle {
         transform: camera_transform,
         ..default()
@@ -92,13 +93,32 @@ fn make_plane(depth: u32, width: u32) -> Mesh {
     let mut triangles: Vec<u32> = Vec::with_capacity(triangle_count);
     let (width_f32, depth_f32) = (width as f32, depth as f32);
 
+    let simplex = Simplex::new(48192874);
+    let perlin = Perlin::new(0891273);
+
+    let resolution = 5.;
     for d in 0..=width {
         for w in 0..=depth {
             let (w_f32, d_f32) = (w as f32, d as f32);
 
-            let x = (w_f32 - width_f32 / 2.) / width_f32;
-            let z = (d_f32 - depth_f32 / 2.) / depth_f32;
-            let pos = [x, calculate_height(x, z), z];
+            let x = (w_f32 - width_f32 / 2.) / resolution;
+            let z = (d_f32 - depth_f32 / 2.) / resolution;
+
+            let p_coords = [x * 2.5, z * 7.5]; // this adds small deformities to make the terrain
+                                               // look more realistic, essentially in an effort to make it look less perfect
+            let y1 = simplex.get([p_coords[0] as f64, p_coords[1] as f64]) as f32;
+
+            // this is added in for medium terrain changes, small hills and valleys etc
+            let p_coords = [x * 0.22, z * 0.22];
+            let y2 = perlin.get([p_coords[0] as f64, p_coords[1] as f64]) as f32;
+
+            // this generates big hills and valleys, but at a low frequency
+            let p_coords = [x * 0.05, z * 0.05];
+            let y3 = perlin.get([p_coords[0] as f64, p_coords[1] as f64]) as f32;
+
+            let y = y1 * 0.3 + y2 * 0.5 + y3 * 2.;
+
+            let pos = [x, y, z];
             positions.push(pos);
             normals.push([0.0, 1.0, 0.0]);
             uvs.push([w_f32 / width_f32, d_f32 / depth_f32]);
@@ -125,10 +145,6 @@ fn make_plane(depth: u32, width: u32) -> Mesh {
     mesh.set_indices(Some(mesh::Indices::U32(triangles)));
 
     mesh
-}
-
-fn calculate_height(x: f32, z: f32) -> f32 {
-    x * z * 3.
 }
 
 //
